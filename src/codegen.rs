@@ -19,6 +19,10 @@ fn brainfuck_codegen_rec(input: &Vec<Token>, scope: &mut Scope) {
         let MEMPOINTER: ObjectRef = ObjectRef::VarRef("memPointer".to_string());
         match token {
             Token::ChangeMem(by) => scope.add_line(Line::new_varinc(INDEX_MEMORY_NOW, *by)),
+            Token::SetMemTo(to) => scope.add_line(Line::VarSet {
+                name: INDEX_MEMORY_NOW,
+                to: Value::Int(*to),
+            }),
             Token::MovePointer(by) => scope.add_line(Line::new_varinc(MEMPOINTER, *by)),
             Token::Print => scope.add_line(Line::new_funccall("putchar", vec![INDEX_MEMORY_NOW])),
             Token::Loop(code) => {
@@ -231,6 +235,10 @@ enum Line {
         name: ObjectRef,
         by: i32,
     },
+    VarSet {
+        name: ObjectRef,
+        to: Value,
+    },
     FuncCall {
         name: String,
         params: Vec<ObjectRef>,
@@ -279,21 +287,20 @@ impl fmt::Display for Line {
                 len,
             } => write!(fmt, "{} {}[{}];", var_type, name, len),
             Line::VarInc { name, by } => write!(fmt, "{} += {};", name, by),
-            Line::FuncCall { name, params } => {
-                write!(
-                    fmt,
-                    "{}({});",
-                    name,
-                    params
-                        .into_iter()
-                        .map(|n| n.to_string())
-                        .collect::<Vec<String>>()
-                        .join(", ")
-                )
-            }
+            Line::FuncCall { name, params } => write!(
+                fmt,
+                "{}({});",
+                name,
+                params
+                    .into_iter()
+                    .map(|n| n.to_string())
+                    .collect::<Vec<String>>()
+                    .join(", ")
+            ),
             Line::While { condition, scope } => {
                 write!(fmt, "while ({}) {{\n{}\n}}", condition, scope)
             }
+            Line::VarSet { name, to } => write!(fmt, "{} = {};", name, to),
         }
     }
 }

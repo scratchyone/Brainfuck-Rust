@@ -1,7 +1,37 @@
+struct Stream<T> {
+    items: Vec<T>,
+}
+impl<T> Stream<T> {
+    fn peek(&self) -> Option<&T> {
+        if self.items.len() > 0 {
+            Some(&self.items[0])
+        } else {
+            None
+        }
+    }
+    fn new(items: Vec<T>) -> Self {
+        Self { items }
+    }
+    fn peekn(&self, n: usize) -> Option<&T> {
+        if self.items.len() > n {
+            Some(&self.items[n])
+        } else {
+            None
+        }
+    }
+    fn next(&mut self) -> Option<T> {
+        if self.items.len() > 0 {
+            Some(self.items.remove(0))
+        } else {
+            None
+        }
+    }
+}
 #[derive(Debug, Clone, PartialEq)]
 pub enum Token {
     MovePointer(i32),
     ChangeMem(i32),
+    SetMemTo(i32),
     Loop(Vec<Token>),
     Input,
     Print,
@@ -37,10 +67,13 @@ pub fn brainfuck_parser(input: String) -> Vec<Token> {
     stack[0].clone()
 }
 pub fn brainfuck_optimizer(input: Vec<Token>) -> Vec<Token> {
-    let mut data = input.iter().peekable();
+    let mut data = Stream::new(input);
     let mut output: Vec<Token> = vec![];
     while data.peek().is_some() {
-        if let Token::ChangeMem(_) = *data.peek().unwrap() {
+        if *data.peek().unwrap() == Token::Loop(vec![Token::ChangeMem(-1)]) {
+            output.push(Token::SetMemTo(0));
+            data.next();
+        } else if let Token::ChangeMem(_) = *data.peek().unwrap() {
             let mut curr_change = 0;
             while let Some(Token::ChangeMem(by)) = data.peek() {
                 curr_change += by;
@@ -54,7 +87,7 @@ pub fn brainfuck_optimizer(input: Vec<Token>) -> Vec<Token> {
                 data.next();
             }
             output.push(Token::MovePointer(curr_change));
-        } else if let Token::Loop(code) = *data.peek().unwrap() {
+        } else if let Token::Loop(code) = data.peek().unwrap() {
             output.push(Token::Loop(brainfuck_optimizer(code.clone())));
             data.next();
         } else {
@@ -84,6 +117,7 @@ pub fn brainfuck_interpreter(
                 }
             }
             Token::None => (),
+            Token::SetMemTo(i) => memory[*mem_pointer] = *i,
             _ => unimplemented!(),
         };
     }
