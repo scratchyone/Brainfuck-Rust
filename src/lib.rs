@@ -69,6 +69,9 @@ pub fn brainfuck_parser(input: String) -> Vec<Token> {
 pub fn brainfuck_optimizer(input: Vec<Token>) -> Vec<Token> {
     let mut data = Stream::new(input);
     let mut output: Vec<Token> = vec![];
+    if let Token::Loop(_) = data.peek().unwrap() {
+        data.next();
+    }
     while data.peek().is_some() {
         if *data.peek().unwrap() == Token::Loop(vec![Token::ChangeMem(-1)]) {
             output.push(Token::SetMemTo(0));
