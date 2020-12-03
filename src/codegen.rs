@@ -1,4 +1,4 @@
-use brainfuck::Token;
+use brainfuck2c::Token;
 use std::{collections::btree_map::Values, fmt};
 pub fn brainfuck_codegen(input: &Vec<Token>) -> String {
     let mut codegen = CodeGen::new();

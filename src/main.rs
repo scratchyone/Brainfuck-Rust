@@ -1,4 +1,4 @@
-use brainfuck;
+use brainfuck2c;
 use std::fs;
 mod codegen;
 use clap::{App, Arg, SubCommand};
@@ -22,12 +22,12 @@ fn main() {
         .get_matches();
 
     let rom = fs::read_to_string(matches.value_of("input").unwrap()).unwrap();
-    let parsed = brainfuck::brainfuck_parser(rom);
+    let parsed = brainfuck2c::brainfuck_parser(rom);
     println!("Parsed!");
     println!("Optimizing...");
     use std::time::Instant;
     let now = Instant::now();
-    let optimized = brainfuck::brainfuck_optimizer(parsed);
+    let optimized = brainfuck2c::brainfuck_optimizer(parsed);
     println!("Optimized!");
     let cg = codegen::brainfuck_codegen(&optimized);
     //println!("{}", cg);
