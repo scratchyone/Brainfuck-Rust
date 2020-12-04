@@ -69,13 +69,20 @@ pub fn brainfuck_parser(input: String) -> Vec<Token> {
 pub fn brainfuck_optimizer(input: Vec<Token>) -> Vec<Token> {
     let mut data = Stream::new(input);
     let mut output: Vec<Token> = vec![];
-    if let Token::Loop(_) = data.peek().unwrap() {
-        data.next();
-    }
     while data.peek().is_some() {
         if *data.peek().unwrap() == Token::Loop(vec![Token::ChangeMem(-1)]) {
-            output.push(Token::SetMemTo(0));
-            data.next();
+            if let Some(Token::ChangeMem(_)) = data.peekn(1) {
+                data.next();
+                let mut curr_change = 0;
+                while let Some(Token::ChangeMem(by)) = data.peek() {
+                    curr_change += by;
+                    data.next();
+                }
+                output.push(Token::SetMemTo(curr_change));
+            } else {
+                output.push(Token::SetMemTo(0));
+                data.next();
+            }
         } else if let Token::ChangeMem(_) = *data.peek().unwrap() {
             let mut curr_change = 0;
             while let Some(Token::ChangeMem(by)) = data.peek() {
